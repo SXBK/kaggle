@@ -45,6 +45,7 @@ x_train = df_train.drop(['parcelid', 'logerror', 'transactiondate', 'propertyzon
 y_train = df_train['logerror'].values
 print(x_train.shape, y_train.shape)
 
+
 train_columns = x_train.columns
 
 for c in x_train.dtypes[x_train.dtypes == object].index.values:
@@ -93,16 +94,29 @@ for i in range(10):
 print(sklearn.metrics.mean_squared_error(y_valid, p_valid))
 log('origin lgbm',str(sklearn.metrics.mean_squared_error(y_valid, p_valid)))
 
+bset=set()
+sset=set()
 for k, labels in zip([400, 600, 800, 1000], labellist):
 	print('Iter is:', k)
-	print('Best 10:', labels[:10])
-	print('Sbst 10:', labels[-10:])
+	print('Best 15:', labels[:15])
+	print('Sbst 15:', labels[-15:])
+	if len(bset)==0 and len(sset)==0:    #first time
+		bset=set(labels[:15])
+		sset=set(labels[-15:])
+	else:
+		bset=bset&set(labels[:15])
+		sset=sset&set(labels[-15:])
+
+print(list(bset))
+print(train_columns.values[list(bset)])
+print(list(sset))
+print(train_columns.values[list(sset)])
 
 
-'''
 del d_train, d_valid; gc.collect()
 del x_train, x_valid; gc.collect()
 
+'''
 print("Prepare for the prediction ...")
 sample = pd.read_csv('data/sample_submission.csv')
 sample['parcelid'] = sample['ParcelId']
