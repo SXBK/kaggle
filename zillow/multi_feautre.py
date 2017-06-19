@@ -28,10 +28,6 @@ x_train = df_train.drop(['parcelid', 'logerror', 'transactiondate', 'propertyzon
 y_train = df_train['logerror'].values
 print(x_train.shape, y_train.shape)
 
-x_train = x_train.drop(['rawcensustractandblock', 'regionidcity', 'regionidneighborhood','regionidzip', 'calculatedfinishedsquarefeet', 'finishedsquarefeet12',
-  'yearbuilt', 'structuretaxvaluedollarcnt' ,'taxvaluedollarcnt',
-   'landtaxvaluedollarcnt', 'taxamount', 'lotsizesquarefeet',
-    'censustractandblock', 'latitude'], axis=1)
 
 for c in x_train.dtypes[x_train.dtypes == object].index.values:
     x_train[c] = (x_train[c] == True)
@@ -91,17 +87,14 @@ for i in [150]:
 bset=set()
 sset=set()
 for k, labels in zip([150], labellist):
-	lenght = -int(len(labels)*0.2)
+	lenght = -int(len(labels)*0.9)
 	print('Iter is:', k)
 	print('Best 15:', labels[:15])
 	print('Sbst 15:', labels[-15:])
-	bset=set(labels[:15])
+	bset=set(labels[:-lenght])
 	sset=set(labels[lenght:])
 
-print(train_columns.values[list(bset)])
-#print(train_columns.values[list(sset)])
-
-x_train = all_columns.drop(train_columns.values[list(sset)], axis=1)
+x_train = all_columns.drop(train_columns.values[list(bset)], axis=1)
 
 x_train,  x_valid = x_train[:split], x_train[split:]
 x_train = x_train.values.astype(np.float32, copy=False)
@@ -112,6 +105,8 @@ d_valid = lgb.Dataset(x_valid, label=y_valid)
 
 watchlist = [d_valid]
 clf = lgb.train(params, d_train, 150, watchlist)
+
+print(train_columns.values[list(sset)])
 
 del d_train, d_valid; gc.collect()
 del x_train, x_valid; gc.collect()
