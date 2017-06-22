@@ -14,7 +14,7 @@ import pandas as pd
 import cv2
 
 
-num = 500
+num = 600
 fl = 0
 
 def load_data():
@@ -22,16 +22,17 @@ def load_data():
 	xtrain = []
 	new_style = {'grid':False}
 	for f, l in ytrain.values:
-		#print(f, l)
 		img = cv2.imread('data/train-jpg/'+f+'.jpg')
 		xtrain.append(img)
 	xtrain = np.array(xtrain)
 	ytrain = ytrain['tags'].values
 	ytrain = encodeY(ytrain)
 	print(ytrain.shape, xtrain.shape)
+	
 	return xtrain, ytrain
 
 def encodeY(tags):
+	global fl
 	allTags = set()
 	for t in tags:
 		for tag in t.split(' '):
@@ -40,7 +41,7 @@ def encodeY(tags):
 	print(allTags)
 	fl = len(allTags)
 	fs = np.zeros((num, fl), dtype="uint8")
-	for j, c in zip(range(fl),tags):
+	for j, c in zip(range(len(tags)),tags):
 		for i in range(fl):
 			fs[j,i] = 1 if c.find(allTags[i])>=0 else 0
 	ytrain = pd.DataFrame(data=fs, columns=allTags)
@@ -48,10 +49,10 @@ def encodeY(tags):
 
 
 x, y = load_data()
-#ytrain = np_utils.to_categorical(y, 8)
-#print(ytrain)
-print(x)
-print(y.head())
+vnum = 500
+x_valid , y_valid = x[vnum:], y[vnum:]
+x, y = x[:vnum], y[:vnum]
+print(y.shape)
 
 #generate cnn
 model = Sequential()
@@ -71,12 +72,15 @@ model.add(Flatten())
 model.add(Dense(128, activation='relu'))
 
 #softmax
-model.add(Dense(17, activation='softmax'))
+model.add(Dense(fl, activation='tanh'))
 
 #training
 sgd = SGD(lr=0.05, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss='categorical_crossentropy', optimizer=sgd, class_mode='categorical')
 
 
-model.fit(x, y, batch_size=50,epochs=10,shuffle=True,verbose=1,validation_split=0.2)
+model.fit(x, y.values, batch_size=50,epochs=10,shuffle=True,verbose=1,validation_split=0.2)
 
+pred = model.predict(x_valid)
+print(y_valid.head())
+print(pred[:5,:])
