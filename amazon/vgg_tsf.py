@@ -15,12 +15,12 @@ import pandas as pd
 import sys
 from myamazon import f2s, load_data
 
-num = 500
-vnum = 500
+num = 100
+vnum = 100
+times = 1
 
-
-
-x, y, fl = load_data(num)
+# num is the raw data num, and you'll get num * times sample
+x, y, fl = load_data(num, times)
 x_valid, y_valid = x[vnum:], y[vnum:]
 x, y = x[:vnum], y[:vnum]
 
@@ -32,9 +32,9 @@ for i, layer in enumerate(model_ORI.layers):
         break
     layer.trainable = False
     model.add(layer)
-model.add(Dense(4096, activation='relu'))
+model.add(Dense(2048, activation='relu'))
 #model.add(Dropout(0.5))
-#model.add(Dense(4096, activation='relu'))
+model.add(Dense(2048, activation='relu'))
 #model.add(Dropout(0.5))
 model.add(Dense(fl, activation='sigmoid'))
 model.summary()

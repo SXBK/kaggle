@@ -1,7 +1,7 @@
 #common utils
 import numpy as np
 import pandas as pd
-from keras.preprocessing import image
+from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 
 def f2s(pred, valid):
 	pred = np.asarray(pred, dtype=np.int)
@@ -11,22 +11,51 @@ def f2s(pred, valid):
 	r = rp*1.0/valid.sum()
 	return 5*p*r/(4*p + r)
 
-def load_data(num):
+def load_data(num, imgtimes=0):
 	ytrain = pd.read_csv('data/train_v2.csv')[:num]
 	xtrain = []
 	new_style = {'grid': False}
 	for f, l in ytrain.values:
 		img_path = 'data/train-jpg/' + f + '.jpg'
-		img = image.load_img(img_path, target_size=(224, 224))
-		x = image.img_to_array(img)
+		img = load_img(img_path, target_size=(224, 224))
+		x = img_to_array(img)
 		xtrain.append(x)
 	xtrain = np.array(xtrain)
 	ytrain = ytrain['tags'].values
 	ytrain, fl = encodeY(ytrain, num)
 	xtrain = (xtrain - xtrain.mean())/(xtrain.std()+1e-8)
+	if imgtimes > 1:
+		xtrain, ytrain = imageStrong(xtrain, ytrain, imgtimes)
 	print(ytrain.shape, xtrain.shape)
 
 	return xtrain, ytrain, fl
+
+def imageStrong(x, y, imgtimes):
+	datagen = ImageDataGenerator(
+	        rotation_range=90,
+			width_shift_range=0.1,
+			height_shift_range=0.1,
+			shear_range=0.1,
+			zoom_range=0.1,
+			horizontal_flip=True,
+			fill_mode='nearest')
+	nimg = np.array([])
+	nlab = pd.DataFrame()
+	for i in range(imgtimes-1):
+		for batch in datagen.flow(x, batch_size=x.shape[0]):
+			if nimg.shape[0] < batch.shape[0]:
+				nimg = np.array(batch, copy=True)
+				#nlab = np.array(y, copy=True)
+				nlab = y.copy()
+			else:
+				nimg = np.concatenate((nimg, np.array(batch)))
+				#nlab = np.concatenate((nlab, np.array(y)))
+				nlab = nlab.append(y)
+			break
+	x = np.concatenate((x, nimg))
+	#y = np.concatenate((y, nlab))
+	y = y.append(nlab)
+	return x, y
 
 
 def encodeY(tags, num):
