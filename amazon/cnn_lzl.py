@@ -5,7 +5,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.advanced_activations import PReLU
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
-from keras.optimizers import SGD, Adadelta, Adagrad
+from keras.optimizers import SGD, Adadelta, Adagrad, Adam
 from keras.utils import np_utils, generic_utils
 import os
 import numpy as np
@@ -14,7 +14,8 @@ import pandas as pd
 import cv2
 
 
-num = 600
+num = 1000
+vnum = 990
 fl = 0
 
 def load_data():
@@ -25,6 +26,7 @@ def load_data():
 		img = cv2.imread('data/train-jpg/'+f+'.jpg')
 		xtrain.append(img)
 	xtrain = np.array(xtrain)
+	xtrain = (xtrain - xtrain.mean())/(xtrain.std()+1e-6)
 	ytrain = ytrain['tags'].values
 	ytrain = encodeY(ytrain)
 	print(ytrain.shape, xtrain.shape)
@@ -49,7 +51,6 @@ def encodeY(tags):
 
 
 x, y = load_data()
-vnum = 500
 x_valid , y_valid = x[vnum:], y[vnum:]
 x, y = x[:vnum], y[:vnum]
 print(y.shape)
@@ -72,15 +73,18 @@ model.add(Flatten())
 model.add(Dense(128, activation='relu'))
 
 #softmax
-model.add(Dense(fl, activation='tanh'))
+model.add(Dense(fl, activation='sigmoid'))
 
 #training
-sgd = SGD(lr=0.05, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = SGD(lr=0.005, decay=1e-5, momentum=0.9, nesterov=True)
 model.compile(loss='categorical_crossentropy', optimizer=sgd, class_mode='categorical')
 
 
-model.fit(x, y.values, batch_size=50,epochs=10,shuffle=True,verbose=1,validation_split=0.2)
+model.fit(x, y.values, batch_size=50,epochs=100,shuffle=True,verbose=1, validation_split=0.1)
 
-pred = model.predict(x_valid)
-print(y_valid.head())
-print(pred[:5,:])
+model.save('model.h5')
+pred = model.predict(x_valid[:10])
+pred[pred>0.5]=1
+pred[pred<0.5]=0
+print(y_valid.head(10))
+print(pred[:,:])

@@ -1,32 +1,57 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from keras.preprocessing.image import ImageDataGenerator
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten, normalization
+from keras.layers.advanced_activations import PReLU
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
+from keras.optimizers import SGD, Adadelta, Adagrad, Adam
+from keras.utils import np_utils, generic_utils
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing import image
-from keras.applications.vgg16 import preprocess_input
-from keras.layers import Dense, Flatten
 import keras
-from keras.models import Sequential
-
+import os
 import numpy as np
+import pandas as pd
+import sys
+import cv2
+from myamazon import f2s, load_data
+
+num = 1200
+vnum = 500
+fl = 0
+
+
+
+x, y = load_data(num)
+x = x - x.mean()
+x_valid, y_valid = x[vnum:], y[vnum:]
+x, y = x[:vnum], y[:vnum]
+print(y.shape)
 
 model_ORI = VGG16(weights='imagenet', include_top=True)
 model = Sequential()
 
 for i, layer in enumerate(model_ORI.layers):
-    if i > len(model_ORI.layers) - 2:
+    if i > len(model_ORI.layers) - 3:
         break
+    layer.trainable = False
     model.add(layer)
-
-model.add(Dense(17, activation='softmax'))
+model.add(Dense(4096, activation='relu'))
+#model.add(Dropout(0.5))
+#model.add(Dense(4096, activation='relu'))
+#model.add(Dropout(0.5))
+model.add(Dense(fl, activation='sigmoid'))
 model.summary()
-adam = keras.optimizers.Adam(lr=0.01, beta_1=0.9,
+adam = keras.optimizers.Adam(lr=1e-4, beta_1=0.9,
                              beta_2=0.999, epsilon=1e-08, decay=0.0)
 model.compile(loss='categorical_crossentropy', optimizer=adam)
+model.fit(x, y.values, epochs=int(sys.argv[1]))
 
-img_path = 'elephant.jpg'
-img = image.load_img(img_path, target_size=(224, 224))
-x = image.img_to_array(img)
-x = np.expand_dims(x, axis=0)
-x = preprocess_input(x)
-
-features = model.predict(x)
-print(features.shape)
-print(features)
+pred = model.predict(x)
+print(y.head())
+q = pred[:5, :].T
+q[q > 0.5] = 1
+q[q <= 0.5] = 0
+print(q)
+print(f2s())
