@@ -8,26 +8,21 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.optimizers import SGD, Adadelta, Adagrad, Adam
 from keras.utils import np_utils, generic_utils
 from keras.applications.vgg16 import VGG16
-from keras.preprocessing import image
 import keras
 import os
 import numpy as np
 import pandas as pd
 import sys
-import cv2
 from myamazon import f2s, load_data
 
-num = 1200
+num = 500
 vnum = 500
-fl = 0
 
 
 
-x, y = load_data(num)
-x = x - x.mean()
+x, y, fl = load_data(num)
 x_valid, y_valid = x[vnum:], y[vnum:]
 x, y = x[:vnum], y[:vnum]
-print(y.shape)
 
 model_ORI = VGG16(weights='imagenet', include_top=True)
 model = Sequential()
@@ -48,10 +43,13 @@ adam = keras.optimizers.Adam(lr=1e-4, beta_1=0.9,
 model.compile(loss='categorical_crossentropy', optimizer=adam)
 model.fit(x, y.values, epochs=int(sys.argv[1]))
 
-pred = model.predict(x)
-print(y.head())
-q = pred[:5, :].T
-q[q > 0.5] = 1
-q[q <= 0.5] = 0
-print(q)
-print(f2s())
+model.save('model_vgg.h5')
+
+y_valid = y[:5].values
+x_valid = x[:5]
+pred = model.predict(x_valid)
+print(y_valid[:,:])
+pred[pred > 0.5] = 1
+pred[pred <= 0.5] = 0
+print(pred[:, :])
+print(f2s(pred, y_valid))
