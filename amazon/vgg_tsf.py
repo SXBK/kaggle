@@ -11,6 +11,7 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.optimizers import SGD, Adadelta, Adagrad, Adam
 from keras.utils import np_utils, generic_utils
 from keras.applications.vgg16 import VGG16
+from keras.callbacks import EarlyStopping
 import keras
 import os
 import numpy as np
@@ -19,7 +20,10 @@ import pandas as pd
 import sys
 from myamazon import f2s, load_data, load_hdfdata
 
-num = 5000
+num = 1000
+# num = [9000, 18000]
+# num = [18000, 27000]
+# num = [27000, 36000]
 
 meanArray = np.array([79.4163002113, 86.8382492145, 76.2017108336])
 
@@ -27,6 +31,12 @@ meanArray = np.array([79.4163002113, 86.8382492145, 76.2017108336])
 x, y, fl = load_hdfdata(num)
 print("load {} samples finished".format(num))
 
+x = np.float32(x) - meanArray
+print("convert {} samples finished".format(num))
+
+
+x_valid, y_valid, _ = load_hdfdata([36000, 40478])
+x_valid = np.float32(x_valid) - meanArray
 
 def make_batches(tsize, bsize):
     num_batches = int(np.ceil(tsize / float(bsize)))
@@ -71,20 +81,23 @@ model.add(Dense(2048, activation='relu'))
 # model.add(Dropout(0.5))
 model.add(Dense(fl, activation='sigmoid'))
 model.summary()
+earlyStopping = EarlyStopping(monitor='val_loss', patience=2,
+                              verbose=0, mode='auto')
 adam = keras.optimizers.Adam(lr=1e-4, beta_1=0.9,
                              beta_2=0.999, epsilon=1e-08, decay=0.0)
-model.compile(loss='categorical_crossentropy', optimizer=adam)
-# model.fit(x, y, epochs=int(sys.argv[1]))
-model.fit_generator(generate_from_data(x, y, 32, 500), steps_per_epoch=500,
-                    epochs=2, max_q_size=1, workers=1, pickle_safe=True)
+model.compile(loss='binary_crossentropy', optimizer=adam)
+model.fit(x, y, epochs=int(sys.argv[1]), validation_data=(x_valid, y_valid),
+          callbacks=[earlyStopping])
+# model.fit_generator(generate_from_data(x, y, 32, 500), steps_per_epoch=500,
+#                     epochs=2, max_q_size=1, workers=1, pickle_safe=True)
 
-model.save('model_vgg.h5')
+model.save('model_vgg1.h5')
 
-y_valid = y[:5]
-x_valid = x[:5]
-pred = model.predict(x_valid)
-print(y_valid[:, :])
+y_valids = y_valid[:5]
+x_valids = x_valid[:5]
+pred = model.predict(x_valids)
+print(y_valids[:, :])
 pred[pred > 0.5] = 1
 pred[pred <= 0.5] = 0
 print(pred[:, :])
-print(f2s(pred, y_valid))
+print(f2s(pred, y_valids))
