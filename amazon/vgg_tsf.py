@@ -45,11 +45,12 @@ def generate_from_data(xtrain, ytrain, batch_size, steps_per_epoch):
         if (bidx % len(batches) == 0 and bidx != 0):
             random.shuffle(index)
 
+        bidx += 1
+
         if (bidx % steps_per_epoch) == 0:
             bidx = 0
             random.shuffle(index)
 
-        bidx += 1
         idx = index[b[0]:b[1]]
         x = np.float32(xtrain[idx]) - meanArray
         y = ytrain[idx]
@@ -74,7 +75,7 @@ adam = keras.optimizers.Adam(lr=1e-4, beta_1=0.9,
                              beta_2=0.999, epsilon=1e-08, decay=0.0)
 model.compile(loss='categorical_crossentropy', optimizer=adam)
 # model.fit(x, y, epochs=int(sys.argv[1]))
-model.fit_generator(generate_from_data(x, y, 16, 10), steps_per_epoch=500,
+model.fit_generator(generate_from_data(x, y, 32, 500), steps_per_epoch=500,
                     epochs=2, max_q_size=1, workers=1, pickle_safe=True)
 
 model.save('model_vgg.h5')
