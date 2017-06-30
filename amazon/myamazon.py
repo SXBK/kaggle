@@ -25,7 +25,7 @@ def load_data(num, imgtimes=0):
     xtrain = np.array(xtrain)
     ytrain = ytrain['tags'].values
     ytrain, fl = encodeY(ytrain, num)
-    xtrain = (xtrain - xtrain.mean()) / (xtrain.std() + 1e-8)
+    #xtrain = (xtrain - xtrain.mean()) / (xtrain.std() + 1e-8)
     if imgtimes > 1:
         xtrain, ytrain = imageStrong(xtrain, ytrain, imgtimes)
     print(ytrain.shape, xtrain.shape)
