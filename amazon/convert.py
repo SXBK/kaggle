@@ -6,8 +6,8 @@ from keras.preprocessing import image
 import numpy as np
 from progressive.bar import Bar
 
-imglist = glob.glob('./train-jpg/*.jpg')
-allimg = sorted(imglist, key=lambda x: int(x[18:].split('.')[0]))
+imglist = glob.glob('data/train-jpg/*.jpg')
+allimg = sorted(imglist, key=lambda x: int(x[21:].split('.')[0]))
 
 imgsize = 224
 totalimg = len(imglist)
@@ -23,4 +23,4 @@ for index, img in enumerate(allimg):
     pb.draw(index)
 
 pddata = pd.DataFrame(alldata)
-pddata.to_hdf('train_amazon.hdf5', 'train_amazon')
+pddata.to_hdf('data/train_amazon.hdf5', 'train_amazon')

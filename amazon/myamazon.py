@@ -69,7 +69,7 @@ def encodeY(tags, num):
     allTags = list(allTags)
     print(allTags)
     fl = len(allTags)
-    fs = np.zeros((num, fl), dtype="uint8")
+    fs = np.zeros((len(num), fl), dtype="uint8")
     for j, c in zip(range(len(tags)), tags):
         for i in range(fl):
             fs[j, i] = 1 if c.find(allTags[i]) >= 0 else 0
@@ -78,12 +78,16 @@ def encodeY(tags, num):
 
 
 def load_hdfdata(num):
-    ytrain = pd.read_csv('data/train_v2.csv')[:num]
+    if np.isscalar(num):
+        num = [0, num]
+    if len(num) == 2:
+        num = np.arange(num[0], num[1])
+
+    ytrain = pd.read_csv('data/train_v2.csv')['tags'].values[num]
     xtrain = np.reshape(pd.read_hdf('data/train_amazon.hdf5',
                                     'train_amazon').values,
                         (-1, 224, 224, 3))
-    xtrain = xtrain[:num]
-    ytrain = ytrain['tags'].values
+    xtrain = xtrain[num]
     ytrain, fl = encodeY(ytrain, num)
 
     print(ytrain.shape, xtrain.shape)
