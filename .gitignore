@@ -3,6 +3,7 @@
 *.ko
 *.obj
 *.elf
+*.pyc
 
 # Precompiled Headers
 *.gch
@@ -34,3 +35,5 @@
 
 #raw data
 zillow/data/*.csv
+amazon/data/*
+mercedes-benz/data/*
