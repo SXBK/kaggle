@@ -19,7 +19,13 @@ for s in others:
     if s.shape[0] == 0: continue
     num += 1
     s = s.drop(['code'], axis=1)
+    clms = list(s.columns)
+    for k, j in enumerate(clms):
+        if j != 'date':
+            clms[k] += str(600849+num)
+    s.columns = clms
     total = total.merge(s, how='left', on='date')
+
 print('merge other {} stocks'.format(num))
 total = total.drop(['date'], axis=1)
 del others
@@ -32,6 +38,7 @@ total = total.dropna(axis=0, how='any')
 total = (total - total.mean())/(total.var()+1e-8)
 
 y = total['close_x'].values[2:]
+print(y.shape)
 x = np.reshape(total.values,(-1,1,10+5*num))[:-2]
 #print(x)
 
@@ -47,6 +54,7 @@ model.add(LSTM(32, input_shape=(1, 10+5*num)))
 model.add(Dense(24, activation='relu'))
 model.add(Dense(2, activation='relu'))
 model.add(Dense(1))
+model.summary()
 model.compile(loss='mse', optimizer='adam')
 model.fit(x_train, y_train, epochs=10, batch_size=8)
 
