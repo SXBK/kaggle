@@ -18,6 +18,9 @@ sql = mysqlHandler(sconfig)
 def log(s):
     print(s)
 
+def getDataFromFetch(vdic, fetch):
+    return pd.DataFrame(list(fetch), columns=vdic)
+
 def getAllField(tname):
     qstr = "show create table {}".format(tname)
     count ,fetch = sql.exceQuery(qstr)
@@ -25,15 +28,27 @@ def getAllField(tname):
     vdic = []
     for line in dick.split('\n'):
         if line.strip()[0] == "`":
-            vdic.append(line.strip().lstrip("`")[:line.index("`")])
+            vdic.append(line.strip().lstrip("`")[:line.strip().lstrip("`").index("`")])
     return vdic
 
-def getDataFromMysql(tname):
+def getDataFromTable(tname):
     vdic = getAllField(tname)
     qstr = "select * from {}".format(tname)
     count ,fetch = sql.exceQuery(qstr)
-    data = pd.DataFrame(list(fetch), columns=vdic)
-    return data
+    return getDataFromFetch(vdic, fetch)
+
+def getAllIndustry():
+    vdic = ['industry','stock_num']
+    qstr = "select industry, count(*) from stock group by industry order by count(*) desc"
+    count ,fetch = sql.exceQuery(qstr)
+    return getDataFromFetch(vdic, fetch)
+
+def getStockByIndustry(industry):
+    vdic = getAllField(stock)
+    qstr = "select * from stock where industry = {}".format(industry)
+    count ,fetch = sql.exceQuery(qstr)
+    return getDataFromFetch(vdic, fetch)
 
 if __name__ == '__main__':
-    print(getDataFromMysql('idx'))
+    #print(getDataFromTable('idx'))
+    print(getAllIndustry())
