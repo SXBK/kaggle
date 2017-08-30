@@ -44,11 +44,18 @@ def getAllIndustry():
     return getDataFromFetch(vdic, fetch)
 
 def getStockByIndustry(industry):
-    vdic = getAllField(stock)
+    vdic = getAllField('stock')
     qstr = "select * from stock where industry = {}".format(industry)
+    count ,fetch = sql.exceQuery(qstr)
+    return getDataFromFetch(vdic, fetch)
+
+def getStockByCode(code):
+    vdic = getAllField('stock_day')
+    qstr = "select sd.* from stock_day sd left join stock s on s.id = sd.stock_id  where s.code = {}".format(code)
     count ,fetch = sql.exceQuery(qstr)
     return getDataFromFetch(vdic, fetch)
 
 if __name__ == '__main__':
     #print(getDataFromTable('idx'))
-    print(getAllIndustry())
+    #print(getAllIndustry())
+    print(getStockByCode(600161))
