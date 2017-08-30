@@ -49,7 +49,7 @@ def getStockByIndustry(industry):
     count ,fetch = sql.exceQuery(qstr)
     return getDataFromFetch(vdic, fetch)
 
-def getStockByCode(code):
+def getStockDayByCode(code):
     vdic = getAllField('stock_day')
     qstr = "select sd.* from stock_day sd left join stock s on s.id = sd.stock_id  where s.code = {}".format(code)
     count ,fetch = sql.exceQuery(qstr)
